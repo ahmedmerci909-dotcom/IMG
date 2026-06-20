@@ -9,6 +9,9 @@ app = Flask(__name__)
 app.config['IMAGE_FOLDER'] = 'images'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}
 
+# إنشاء مجلد الصور إذا لم يكن موجود
+os.makedirs(app.config['IMAGE_FOLDER'], exist_ok=True)
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
@@ -22,7 +25,6 @@ def get_image(filename):
         if not os.path.exists(file_path):
             return jsonify({'error': 'Image not found'}), 404
         
-        # تحديد نوع الملف
         ext = filename.split('.')[-1].lower()
         mime_types = {
             'jpg': 'image/jpeg',
@@ -68,7 +70,7 @@ def list_images():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# 4. رفع صورة جديدة (اختياري)
+# 4. رفع صورة جديدة
 @app.route('/upload', methods=['POST'])
 def upload_image():
     try:
@@ -93,12 +95,14 @@ def upload_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# 5. صفحة رئيسية (للترحيب)
+# 5. صفحة رئيسية
 @app.route('/')
 def home():
     return jsonify({
         'name': 'Image API',
         'version': '1.0',
+        'status': 'running',
+        'port': 20219,
         'endpoints': {
             '/images': 'List all images',
             '/image/<filename>': 'Get specific image',
@@ -107,5 +111,11 @@ def home():
         }
     })
 
+# 6. صفحة صحية (للـ Railway)
+@app.route('/health')
+def health():
+    return jsonify({'status': 'healthy', 'port': 20219})
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # استخدم البورت 20219
+    app.run(host='0.0.0.0', port=20219, debug=True)
